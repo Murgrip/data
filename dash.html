@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Navigation Bar with Sidebar</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            -webkit-user-select: none; /* Disable text selection */
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            flex-wrap: wrap;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #555;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .navbar-logo {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-logo-icon {
+            font-size: 28px;
+        }
+
+        .navbar-center {
+            display: flex;
+            flex-grow: 1;
+            justify-content: center;
+            gap: 30px;
+            margin: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .navbar-link {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: color 0.3s ease, background-color 0.3s ease, border-bottom 0.3s ease;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .navbar-link:hover {
+            color: #007bff;
+            background-color: #e9f5ff;
+        }
+
+        .navbar-link.active {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            font-weight: 600;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        main {
+            padding-top: 65px; /* Space for the fixed navbar */
+            box-sizing: border-box;
+            padding-bottom: 20px; /* Padding at the bottom of main */
+            padding-left: 20px; /* Padding on the sides of main */
+            padding-right: 20px; /* Padding on the sides of main */
+        }
+
+        .content-section {
+            display: none;
+            width: 100%;
+            padding: 0; /* Remove padding from content-section itself */
+            background-color: transparent; /* Transparent background as requested */
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-top: 20px; /* Margin from the top */
+            overflow: hidden; /* Ensures border-radius applies to list items */
+        }
+
+        .content-section:first-of-type {
+            margin-top: 0;
+        }
+
+        .content-section.active-content {
+            display: block;
+        }
+
+        .content-section h2 {
+            font-size: 24px;
+            color: #333;
+            margin: 20px; /* Padding for the heading inside the transparent section */
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 200;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        .sidebar-open {
+            width: 250px;
+        }
+
+        .sidebar-close-button {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            color: #818181;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .sidebar-close-button:hover {
+            color: #f1f1f1;
+        }
+
+        .sidebar-content {
+            padding: 8px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar-content:hover {
+            color: #f1f1f1;
+            background-color: #555;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 150;
+            cursor: pointer;
+        }
+
+        .overlay-active {
+            display: block;
+        }
+
+        /* List View Specific Styles */
+        .list-container {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            background-color: #ffffff; /* Solid white background for the entire list */
+            border-radius: 8px; /* Apply border-radius to the list container */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Shadow for the list container */
+            overflow: hidden; /* Ensures inner items respect border-radius */
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .list-item:last-child {
+            border-bottom: none; /* No border for the last item */
+        }
+
+        .list-item:active {
+            background-color: #e6e6e6;
+        }
+
+        .list-item-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 15px;
+            width: 60px;
+            text-align: center;
+        }
+
+        .list-item-emoji {
+            font-size: 32px;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .list-item-category {
+            font-size: 11px;
+            font-weight: 500;
+            color: #888;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .list-item-right {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-item-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .list-item-date {
+            font-size: 12px;
+            color: #777;
+            text-align: right;
+            margin-top: auto;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px;
+            }
+            .navbar-center {
+                width: 100%;
+                justify-content: space-around;
+                margin-top: 10px;
+                order: 3;
+            }
+            .navbar-link {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            .navbar-left, .navbar-right {
+                flex-basis: auto;
+            }
+            main {
+                padding-top: 105px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-logo {
+                font-size: 18px;
+            }
+            .navbar-logo-icon {
+                font-size: 24px;
+            }
+            .navbar-button {
+                font-size: 20px;
+            }
+            .navbar-center {
+                gap: 10px;
+            }
+            .list-item {
+                padding: 12px 15px; /* Smaller padding on small screens */
+            }
+            .list-item-emoji {
+                font-size: 28px;
+            }
+            .list-item-title {
+                font-size: 15px;
+            }
+            .list-item-date {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button id="menuButton" class="navbar-button">
+                &#9776; </button>
+            <span class="navbar-logo">
+                <span class="navbar-logo-icon">&#128722;</span> My Store
+            </span>
+        </div>
+
+        <div class="navbar-center" id="navLinksContainer">
+            <a href="#" class="navbar-link" data-target-id="section-one">MUSIC</a>
+            <a href="#" class="navbar-link" data-target-id="section-two">MOVIES</a>
+            <a href="#" class="navbar-link active" data-target-id="section-three">BOOKS</a>
+            <a href="#" class="navbar-link" data-target-id="section-four">GAMES</a>
+            <a href="#" class="navbar-link" data-target-id="section-five">MORE</a>
+        </div>
+
+        <div class="navbar-right">
+        </div>
+    </nav>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="sidebar-close-button" id="closeSidebarBtn">&times;</a>
+        <div class="sidebar-header">Main Menu</div>
+        <a href="#" class="sidebar-content">Home</a>
+        <a href="#" class="sidebar-content">About Us</a>
+        <a href="#" class="sidebar-content">Services</a>
+        <a href="#" class="sidebar-content">Contact</a>
+        <a href="#" class="sidebar-content">Settings</a>
+    </div>
+
+    <div id="sidebarOverlay" class="overlay"></div>
+
+    <main>
+        <div id="section-one" class="content-section">
+            <h2>Music Collection</h2>
+            <div class="list-container">
+                <div class="list-item" onclick="handleItemClick('Music: Pop Hits')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🎵</span>
+                        <span class="list-item-category">POP</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Discover the latest chart-topping pop hits and trending artists.</div>
+                        <div class="list-item-date">Today, 09:00 AM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Music: Rock Anthems')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🎸</span>
+                        <span class="list-item-category">ROCK</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Blast classic rock anthems and new releases from legendary bands.</div>
+                        <div class="list-item-date">Yesterday, 03:30 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Music: Classical Masterpieces')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🎻</span>
+                        <span class="list-item-category">CLASSICAL</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Immerse yourself in timeless classical compositions and orchestral works.</div>
+                        <div class="list-item-date">Mon, May 27, 10:00 AM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-two" class="content-section">
+            <h2>Movie Library</h2>
+            <div class="list-container">
+                <div class="list-item" onclick="handleItemClick('Movie: Action Thriller')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">💥</span>
+                        <span class="list-item-category">ACTION</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Edge-of-your-seat action thrillers with explosive stunts and intense plots.</div>
+                        <div class="list-item-date">Today, 08:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Movie: Romantic Comedy')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">❤️</span>
+                        <span class="list-item-category">COMEDY</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Laugh and swoon with our collection of heartwarming romantic comedies.</div>
+                        <div class="list-item-date">Yesterday, 06:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Movie: Sci-Fi Epic')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🚀</span>
+                        <span class="list-item-category">SCI-FI</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Explore distant galaxies and futuristic worlds in epic science fiction films.</div>
+                        <div class="list-item-date">Tue, May 26, 09:00 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-three" class="content-section active-content">
+            <h2>Book Corner</h2>
+            <div class="list-container">
+                <div class="list-item" onclick="handleItemClick('Book: Fantasy Adventure')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🧙</span>
+                        <span class="list-item-category">FANTASY</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Embark on magical journeys with dragons, elves, and ancient prophecies.</div>
+                        <div class="list-item-date">Today, 11:00 AM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Book: Mystery Thriller')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🕵️‍♀️</span>
+                        <span class="list-item-category">MYSTERY</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Solve perplexing crimes and uncover hidden secrets in gripping thrillers.</div>
+                        <div class="list-item-date">Yesterday, 02:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Book: Self-Help Guide')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🧠</span>
+                        <span class="list-item-category">SELF-HELP</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Gain insights and improve your life with inspiring self-help books.</div>
+                        <div class="list-item-date">Mon, May 27, 07:00 AM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Book: Historical Fiction')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">📜</span>
+                        <span class="list-item-category">HISTORY</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Travel back in time and experience pivotal moments through compelling stories.</div>
+                        <div class="list-item-date">Sun, May 26, 04:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Book: Science Fiction')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🌌</span>
+                        <span class="list-item-category">SCI-FI</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Explore futuristic societies, alien encounters, and technological wonders.</div>
+                        <div class="list-item-date">Sat, May 25, 11:00 AM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-four" class="content-section">
+            <h2>Gaming Zone</h2>
+            <div class="list-container">
+                <div class="list-item" onclick="handleItemClick('Game: RPG Adventure')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">⚔️</span>
+                        <span class="list-item-category">RPG</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Dive into vast worlds, create your hero, and embark on epic role-playing adventures.</div>
+                        <div class="list-item-date">Today, 01:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Game: Strategy Game')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🧠</span>
+                        <span class="list-item-category">STRATEGY</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Test your tactical skills and conquer empires in challenging strategy games.</div>
+                        <div class="list-item-date">Yesterday, 05:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('Game: Sports Simulation')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">⚽</span>
+                        <span class="list-item-category">SPORTS</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Experience realistic sports simulations and compete for championships.</div>
+                        <div class="list-item-date">Mon, May 27, 08:00 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-five" class="content-section">
+            <h2>More to Explore</h2>
+            <div class="list-container">
+                <div class="list-item" onclick="handleItemClick('More: Tech Gadgets')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">💻</span>
+                        <span class="list-item-category">TECH</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Explore the latest in consumer electronics, smart devices, and innovative gadgets.</div>
+                        <div class="list-item-date">Today, 10:00 AM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('More: Home Decor')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🛋️</span>
+                        <span class="list-item-category">HOME</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Find stylish furniture, decor items, and accessories to beautify your living space.</div>
+                        <div class="list-item-date">Yesterday, 04:00 PM</div>
+                    </div>
+                </div>
+                <div class="list-item" onclick="handleItemClick('More: Fitness & Health')">
+                    <div class="list-item-left">
+                        <span class="list-item-emoji">🏋️‍♀️</span>
+                        <span class="list-item-category">HEALTH</span>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-title">Discover products and guides for a healthier lifestyle, from workout gear to supplements.</div>
+                        <div class="list-item-date">Tue, May 26, 09:00 AM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const navLinksContainer = document.getElementById('navLinksContainer');
+        const menuButton = document.getElementById('menuButton');
+        const sidebar = document.getElementById('mySidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Function to handle clicks on list items (shows a simple alert)
+        function handleItemClick(itemName) {
+            alert('You tapped on: ' + itemName);
+            // In a real application, you would navigate to a new page or load more detailed content here.
+        }
+
+        // Function to open the sidebar
+        function openSidebar() {
+            sidebar.classList.add('sidebar-open');
+            sidebarOverlay.classList.add('overlay-active');
+        }
+
+        // Function to close the sidebar
+        function closeSidebar() {
+            sidebar.classList.remove('sidebar-open');
+            sidebarOverlay.classList.remove('overlay-active');
+        }
+
+        // Function to activate a specific tab and display its content
+        function activateTab(targetId) {
+            // Deactivate all navigation links
+            document.querySelectorAll('.navbar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Hide all content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active-content');
+            });
+
+            // Activate the clicked navigation link
+            const clickedLink = document.querySelector(`.navbar-link[data-target-id="${targetId}"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+
+            // Show the corresponding content section
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                targetContent.classList.add('active-content');
+            }
+        }
+
+        // Event listener for the menu button to open sidebar
+        menuButton.addEventListener('click', openSidebar);
+
+        // Event listener for the sidebar close button
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+
+        // Event listener for the overlay to close sidebar when clicking outside
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Event delegation for navigation links (handles clicks on the hardcoded links)
+        navLinksContainer.addEventListener('click', (event) => {
+            const clickedLink = event.target.closest('.navbar-link');
+            if (clickedLink) {
+                event.preventDefault(); // Prevent default link behavior (page reload)
+                const targetId = clickedLink.getAttribute('data-target-id');
+                if (targetId) {
+                    activateTab(targetId);
+                }
+            }
+        });
+
+        // Initialize the active tab on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialActiveLink = document.querySelector('.navbar-link.active');
+            if (initialActiveLink) {
+                const targetId = initialActiveLink.getAttribute('data-target-id');
+                if (targetId) {
+                    activateTab(targetId);
+                }
+            } else {
+                // If no active link is set, default to the first section
+                const firstLink = document.querySelector('.navbar-link');
+                if (firstLink) {
+                    firstLink.classList.add('active');
+                    const targetId = firstLink.getAttribute('data-target-id');
+                    if (targetId) {
+                        document.getElementById(targetId).classList.add('active-content');
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+  </html>
